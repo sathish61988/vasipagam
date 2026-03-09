@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>வாசிப்பகம்</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Georgia,serif;background:#0f0a04;min-height:100vh;overflow-x:hidden}
+@keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+
+/* LIBRARY */
+#library{min-height:100vh;padding:44px 16px 80px;display:flex;flex-direction:column;align-items:center}
+.lib-title{font-size:2.1rem;color:#c9932a;font-weight:700;letter-spacing:.04em;text-align:center}
+.lib-sub{color:rgba(245,234,214,.32);font-size:.76rem;font-style:italic;margin-top:4px;letter-spacing:.1em;text-align:center}
+.lib-line{width:68px;height:1px;background:linear-gradient(90deg,transparent,#c9932a,transparent);margin:10px auto 20px}
+.lib-actions{display:flex;gap:8px;width:100%;margin-bottom:12px;align-items:center;justify-content:flex-end}
+.edit-mode-btn{background:none;border:1px solid rgba(201,147,42,.35);color:rgba(201,147,42,.7);font-family:Georgia,serif;font-size:.72rem;padding:6px 12px;border-radius:17px;cursor:pointer;font-style:italic}
+.edit-mode-btn.active{background:rgba(201,147,42,.15);color:#c9932a;border-color:#c9932a}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;width:100%}
+.book-card{border-radius:13px;overflow:visible;cursor:pointer;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);animation:fu .4s ease backwards;transition:transform .15s;position:relative}
+.book-card:active{transform:scale(0.97)}
+.book-card-inner{border-radius:13px;overflow:hidden}
+.book-cover{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px;text-align:center;position:relative;height:130px}
+.book-spine-bar{position:absolute;left:0;top:0;bottom:0;width:7px;background:rgba(0,0,0,.28)}
+.cover-icon{font-size:1.8rem}
+.cover-title{color:rgba(255,255,255,.88);font-size:.67rem;line-height:1.35;text-shadow:0 1px 4px rgba(0,0,0,.5);padding-left:5px}
+.book-info{padding:8px 10px 10px}
+.book-name{color:#f0e0c0;font-size:.76rem;line-height:1.3;font-weight:600}
+.book-author{color:rgba(240,224,192,.38);font-size:.64rem;font-style:italic;margin-top:2px}
+.book-type{display:inline-block;font-size:.58rem;padding:2px 7px;border-radius:8px;margin-top:4px;font-style:italic}
+.type-img{background:rgba(201,147,42,.15);color:#c9932a;border:1px solid rgba(201,147,42,.3)}
+.type-txt{background:rgba(100,180,100,.1);color:#7ab87a;border:1px solid rgba(100,180,100,.2)}
+.prog-bar{margin-top:6px;height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:#c9932a;border-radius:2px;transition:width .3s}
+.prog-pct{color:rgba(201,147,42,.6);font-size:.58rem;margin-top:3px}
+.bookmark-badge{position:absolute;top:-5px;right:-5px;width:22px;height:22px;border-radius:50%;background:#c9932a;color:#fff;font-size:.65rem;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.4);z-index:5}
+.continue-bar{margin-top:5px;padding:4px 7px;border-radius:6px;background:rgba(201,147,42,.12);border:1px solid rgba(201,147,42,.25);color:#c9932a;font-size:.6rem;font-style:italic}
+.card-edit-overlay{display:none;position:absolute;inset:0;border-radius:13px;background:rgba(0,0,0,.6);z-index:10;flex-direction:column;align-items:center;justify-content:center;gap:8px;animation:fadeIn .2s}
+.edit-mode .card-edit-overlay{display:flex}
+.card-action-btn{width:82%;padding:9px 0;border-radius:9px;font-family:Georgia,serif;font-size:.8rem;border:none;cursor:pointer;font-style:italic}
+.btn-edit-book{background:rgba(201,147,42,.85);color:#fff}
+.btn-del-book{background:rgba(180,50,40,.85);color:#fff}
+.add-btn{margin-top:20px;width:100%;max-width:340px;padding:14px;border-radius:13px;border:1px dashed rgba(201,147,42,.5);background:rgba(201,147,42,.07);color:#c9932a;font-family:Georgia,serif;font-size:.9rem;cursor:pointer;text-align:center}
+.add-btn:active{background:rgba(201,147,42,.14)}
+
+/* DIALOGS */
+.dialog-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-end;justify-content:center;padding:0}
+.dialog-overlay.show{display:flex;animation:fadeIn .2s}
+.dialog-box{background:#1a1209;border:1px solid rgba(201,147,42,.3);border-radius:20px 20px 0 0;padding:20px 20px 36px;width:100%;max-width:480px;animation:slideUp .25s ease}
+.dialog-icon{font-size:1.8rem;margin-bottom:8px;text-align:center}
+.dialog-title{color:#f0e0c0;font-size:1rem;font-weight:600;margin-bottom:5px;text-align:center}
+.dialog-msg{color:rgba(240,224,192,.5);font-size:.76rem;line-height:1.5;margin-bottom:18px;text-align:center}
+.dialog-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dialog-btn{padding:12px 0;border-radius:10px;font-family:Georgia,serif;font-size:.85rem;border:none;cursor:pointer;font-style:italic}
+.dialog-cancel{background:rgba(255,255,255,.07);color:rgba(240,224,192,.7)}
+.dialog-confirm-del{background:linear-gradient(135deg,#8b2a2a,#c94040);color:#fff}
+
+/* NOTES PANEL */
+.notes-panel{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:150;align-items:flex-end;justify-content:center}
+.notes-panel.show{display:flex;animation:fadeIn .2s}
+.notes-box{background:#1a1209;border:1px solid rgba(201,147,42,.25);border-radius:20px 20px 0 0;padding:20px 18px 36px;width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column;animation:slideUp .25s ease}
+.notes-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.notes-title{color:#c9932a;font-size:.95rem;font-weight:600}
+.notes-close{background:none;border:none;color:rgba(240,224,192,.5);font-size:1.3rem;cursor:pointer;padding:2px 6px}
+.notes-page-info{color:rgba(201,147,42,.6);font-size:.68rem;font-style:italic;margin-bottom:10px}
+.notes-list{flex:1;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:8px}
+.note-item{background:rgba(255,255,255,.04);border:1px solid rgba(201,147,42,.15);border-radius:10px;padding:10px 12px;position:relative}
+.note-item-pg{color:rgba(201,147,42,.55);font-size:.62rem;font-style:italic;margin-bottom:3px}
+.note-item-text{color:#f0e0c0;font-size:.82rem;line-height:1.5}
+.note-item-del{position:absolute;top:8px;right:8px;background:none;border:none;color:rgba(240,100,80,.5);font-size:.8rem;cursor:pointer;padding:2px 5px}
+.note-item-del:active{color:rgba(240,100,80,1)}
+.notes-input-area{border-top:1px solid rgba(201,147,42,.15);padding-top:12px}
+.notes-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(201,147,42,.25);border-radius:10px;padding:10px 12px;color:#f0e0c0;font-family:Georgia,serif;font-size:.85rem;outline:none;resize:none;height:80px;line-height:1.6}
+.notes-textarea:focus{border-color:rgba(201,147,42,.6)}
+.notes-save-btn{width:100%;margin-top:8px;padding:11px;border-radius:10px;background:linear-gradient(135deg,#8b3a2a,#c9932a);color:#fff;font-family:Georgia,serif;font-size:.85rem;font-style:italic;border:none;cursor:pointer}
+
+/* BOOKMARKS PANEL */
+.bm-panel{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:150;align-items:flex-end;justify-content:center}
+.bm-panel.show{display:flex;animation:fadeIn .2s}
+.bm-box{background:#1a1209;border:1px solid rgba(201,147,42,.25);border-radius:20px 20px 0 0;padding:20px 18px 36px;width:100%;max-width:480px;max-height:75vh;display:flex;flex-direction:column;animation:slideUp .25s ease}
+.bm-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.bm-title{color:#c9932a;font-size:.95rem;font-weight:600}
+.bm-close{background:none;border:none;color:rgba(240,224,192,.5);font-size:1.3rem;cursor:pointer;padding:2px 6px}
+.bm-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.bm-item{background:rgba(255,255,255,.04);border:1px solid rgba(201,147,42,.15);border-radius:10px;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .15s}
+.bm-item:active{background:rgba(201,147,42,.1)}
+.bm-item-left{flex:1}
+.bm-item-ch{color:#c9932a;font-size:.72rem;font-style:italic}
+.bm-item-title{color:#f0e0c0;font-size:.82rem;margin-top:2px}
+.bm-item-pg{color:rgba(240,224,192,.4);font-size:.64rem;margin-top:2px}
+.bm-item-del{background:none;border:none;color:rgba(240,100,80,.4);font-size:.9rem;cursor:pointer;padding:4px 7px}
+.bm-item-del:active{color:rgba(240,100,80,1)}
+.bm-empty{color:rgba(240,224,192,.3);font-size:.8rem;font-style:italic;text-align:center;padding:20px 0}
+
+/* ADD/EDIT SCREEN */
+#addScreen{display:none;min-height:100vh;background:#0f0a04;flex-direction:column}
+.add-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;background:#080603;flex-shrink:0}
+.add-bar-title{color:#c9932a;font-size:1rem;font-weight:600}
+.add-close{background:none;border:1px solid rgba(201,147,42,.4);color:#c9932a;font-family:Georgia,serif;font-size:.79rem;padding:6px 12px;border-radius:17px;cursor:pointer}
+.add-body{flex:1;overflow-y:auto;padding:20px 16px 40px}
+.field-group{margin-bottom:16px}
+.field-label{color:rgba(240,224,192,.6);font-size:.72rem;font-style:italic;margin-bottom:6px;display:block;letter-spacing:.06em}
+.field-input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(201,147,42,.25);border-radius:10px;padding:11px 13px;color:#f0e0c0;font-family:Georgia,serif;font-size:.9rem;outline:none;-webkit-appearance:none}
+.field-input:focus{border-color:rgba(201,147,42,.6)}
+.type-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.type-tab{padding:12px;border-radius:11px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:rgba(240,224,192,.5);font-family:Georgia,serif;font-size:.82rem;cursor:pointer;text-align:center;transition:all .2s}
+.type-tab.active{border-color:rgba(201,147,42,.6);background:rgba(201,147,42,.1);color:#c9932a}
+.type-tab .tab-icon{font-size:1.3rem;display:block;margin-bottom:4px}
+.img-upload-area{border:2px dashed rgba(201,147,42,.35);border-radius:13px;padding:24px 16px;text-align:center;cursor:pointer;background:rgba(201,147,42,.04);position:relative}
+.img-upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:100px}
+.img-upload-icon{font-size:2rem;margin-bottom:8px}
+.img-upload-title{color:#c9932a;font-size:.85rem;font-weight:600;margin-bottom:4px}
+.img-upload-sub{color:rgba(201,147,42,.5);font-size:.7rem}
+.img-preview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}
+.img-thumb{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:3/4;border:1px solid rgba(201,147,42,.2)}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-thumb-del{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;border:none;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.img-count{color:rgba(201,147,42,.7);font-size:.72rem;margin-top:8px;text-align:center;font-style:italic}
+.field-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(201,147,42,.25);border-radius:10px;padding:11px 13px;color:#f0e0c0;font-family:Georgia,serif;font-size:.88rem;outline:none;resize:none;min-height:180px;line-height:1.7;-webkit-appearance:none}
+.field-textarea:focus{border-color:rgba(201,147,42,.6)}
+.icon-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:6px}
+.icon-opt{font-size:1.4rem;text-align:center;padding:8px 4px;border-radius:9px;border:1px solid rgba(255,255,255,.07);cursor:pointer}
+.icon-opt.sel{background:rgba(201,147,42,.2);border-color:rgba(201,147,42,.5)}
+.color-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+.color-opt{height:38px;border-radius:9px;cursor:pointer;border:2px solid transparent}
+.color-opt.sel{border-color:#c9932a}
+.save-btn{width:100%;padding:15px;border-radius:13px;background:linear-gradient(135deg,#8b3a2a,#c9932a);color:#fff;font-family:Georgia,serif;font-size:1rem;font-style:italic;border:none;cursor:pointer;margin-top:8px}
+
+/* IMAGE READER */
+#imgReader{display:none;height:100vh;flex-direction:column;background:#000;overflow:hidden}
+.img-reader-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:rgba(0,0,0,.9);flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.08)}
+.img-reader-title{color:#f0e0c0;font-size:.78rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.img-reader-btns{display:flex;gap:4px}
+.img-top-btn{background:none;border:1px solid rgba(255,255,255,.15);color:rgba(240,224,192,.7);font-size:.8rem;padding:5px 9px;border-radius:8px;cursor:pointer}
+.img-top-btn.active{background:rgba(201,147,42,.2);border-color:#c9932a;color:#c9932a}
+.img-page-area{flex:1;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center}
+.img-page-area img{max-width:100%;max-height:100%;object-fit:contain;user-select:none}
+.img-nav-overlay{position:absolute;top:0;bottom:0;width:38%;cursor:pointer;display:flex;align-items:center}
+.img-nav-left{left:0;justify-content:flex-start;padding-left:10px}
+.img-nav-right{right:0;justify-content:flex-end;padding-right:10px}
+.img-nav-arrow{width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.5);color:#f0e0c0;display:flex;align-items:center;justify-content:center;font-size:1rem;border:1px solid rgba(255,255,255,.15);opacity:.6}
+.img-bottom-bar{padding:10px 16px 24px;background:rgba(0,0,0,.9);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,.08)}
+.img-pg-info{text-align:center;flex:1}
+.img-pg-num{color:#c9932a;font-size:.85rem;font-style:italic}
+.img-pg-dots{display:flex;gap:5px;justify-content:center;margin-top:5px;flex-wrap:wrap;max-width:200px;margin-left:auto;margin-right:auto}
+.img-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:background .2s}
+.img-dot.active{background:#c9932a}
+.img-nav-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#f0e0c0;font-family:Georgia,serif;font-style:italic;font-size:.8rem;padding:9px 14px;border-radius:10px;cursor:pointer}
+.img-nav-btn:disabled{opacity:.3;cursor:default}
+
+/* TEXT READER */
+#reader{display:none;height:100vh;flex-direction:column;overflow:hidden}
+.reader-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;flex-shrink:0;background:#080603;box-shadow:0 2px 14px rgba(0,0,0,.4)}
+.back-btn{background:none;border:1px solid rgba(201,147,42,.4);color:#c9932a;font-family:Georgia,serif;font-style:italic;font-size:.79rem;padding:6px 11px;border-radius:17px;cursor:pointer}
+.reader-title-text{font-size:.75rem;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctrl-btns{display:flex;gap:2px}
+.ctrl-btn{background:none;border:none;font-size:1rem;padding:5px 5px;cursor:pointer;opacity:.5;position:relative}
+.ctrl-btn.active{opacity:1;color:#c9932a!important}
+.ctrl-btn-badge{position:absolute;top:0;right:0;width:8px;height:8px;border-radius:50%;background:#c9932a;display:none}
+.ctrl-btn.has-badge .ctrl-btn-badge{display:block}
+.prog-line{height:2px;flex-shrink:0}
+.prog-active{height:100%;background:#c9932a;transition:width .4s;width:0%}
+.content{flex:1;overflow-y:auto;padding:22px 17px 14px;-webkit-overflow-scrolling:touch}
+.ch-header{text-align:center;margin-bottom:22px;padding-bottom:16px}
+.ch-label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-style:italic;color:#8b3a2a}
+.ch-title{font-size:1.4rem;font-weight:700;margin-top:5px;line-height:1.25}
+.ch-orn{color:#c9932a;margin-top:7px;letter-spacing:.22em;font-size:.82rem}
+.page-text p{margin-bottom:1.4em;text-align:justify}
+.drop-cap{float:left;line-height:.82;margin:5px 8px 0 0;color:#8b3a2a;font-weight:700}
+.page-note-indicator{margin-top:10px;padding:8px 11px;border-radius:9px;border-left:3px solid #c9932a;background:rgba(201,147,42,.07);color:rgba(201,147,42,.8);font-size:.72rem;font-style:italic;cursor:pointer}
+.font-ctrl{display:flex;align-items:center;justify-content:center;gap:13px;padding:13px 0 5px;margin-top:6px}
+.font-btn{width:40px;height:40px;border-radius:10px;font-size:1rem;cursor:pointer;font-family:Georgia,serif}
+.font-val{font-size:.76rem;font-style:italic;min-width:20px;text-align:center}
+.nav-bar{padding:10px 13px 20px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:7px}
+.nav-btn{flex:1;font-family:Georgia,serif;font-style:italic;font-size:.86rem;padding:12px 0;border-radius:10px;cursor:pointer}
+.nav-info{text-align:center;min-width:52px}
+.nav-pg{font-size:.68rem;font-style:italic}
+.nav-pct{font-size:.62rem;margin-top:1px;color:#c9932a}
+</style>
+</head>
+<body>
+
+<!-- LIBRARY -->
+<div id="library">
+  <div class="lib-title">வாசிப்பகம்</div>
+  <div class="lib-sub">Vāsipagam · Reading Sanctuary</div>
+  <div class="lib-line"></div>
+  <div class="lib-actions">
+    <button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()">✏️ திருத்து / நீக்கு</button>
+  </div>
+  <div class="grid" id="bookGrid"></div>
+  <button class="add-btn" onclick="showAdd()">✦ புதிய நூல் சேர்க்க</button>
+</div>
+
+<!-- DELETE CONFIRM -->
+<div class="dialog-overlay" id="confirmDialog">
+  <div class="dialog-box">
+    <div class="dialog-icon">🗑️</div>
+    <div class="dialog-title" id="dialogTitle">நூலை நீக்கவா?</div>
+    <div class="dialog-msg">இந்த நூல் நிரந்தரமாக நீக்கப்படும்.</div>
+    <div class="dialog-btns">
+      <button class="dialog-btn dialog-cancel" onclick="closeDialog()">ரத்து</button>
+      <button class="dialog-btn dialog-confirm-del" id="dialogConfirmBtn">நீக்கு</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTES PANEL -->
+<div class="notes-panel" id="notesPanel" onclick="closeNotes(event)">
+  <div class="notes-box" onclick="event.stopPropagation()">
+    <div class="notes-header">
+      <div class="notes-title">📝 குறிப்புகள்</div>
+      <button class="notes-close" onclick="closeNotes()">✕</button>
+    </div>
+    <div class="notes-page-info" id="notePageInfo"></div>
+    <div class="notes-list" id="notesList"></div>
+    <div class="notes-input-area">
+      <textarea class="notes-textarea" id="noteInput" placeholder="இந்த பக்கத்தில் உங்கள் குறிப்பை எழுதுங்கள்..."></textarea>
+      <button class="notes-save-btn" onclick="saveNote()">✦ குறிப்பு சேமி</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKMARKS PANEL -->
+<div class="bm-panel" id="bmPanel" onclick="closeBm(event)">
+  <div class="bm-box" onclick="event.stopPropagation()">
+    <div class="bm-header">
+      <div class="bm-title">🔖 புக்மார்க்கள்</div>
+      <button class="bm-close" onclick="closeBm()">✕</button>
+    </div>
+    <div class="bm-list" id="bmList"></div>
+  </div>
+</div>
+
+<!-- ADD/EDIT SCREEN -->
+<div id="addScreen" style="display:none;background:#0f0a04;flex-direction:column">
+  <div class="add-bar">
+    <button class="add-close" onclick="showLibrary()">← திரும்பு</button>
+    <div class="add-bar-title" id="addBarTitle">புதிய நூல்</div>
+    <div style="width:60px"></div>
+  </div>
+  <div class="add-body">
+    <div class="field-group">
+      <label class="field-label">நூல் வகை</label>
+      <div class="type-tabs" id="typeTabs">
+        <div class="type-tab active" id="tabImg" onclick="switchType('img')"><span class="tab-icon">🖼️</span>படங்கள்</div>
+        <div class="type-tab" id="tabTxt" onclick="switchType('txt')"><span class="tab-icon">✍️</span>தட்டச்சு உரை</div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">நூல் தலைப்பு *</label>
+      <input class="field-input" id="inTitle" placeholder="உ.தா: சித்து விளையாடல்கள்" maxlength="60">
+    </div>
+    <div class="field-group">
+      <label class="field-label">ஆசிரியர்</label>
+      <input class="field-input" id="inAuthor" placeholder="உ.தா: அறிஞர் தொகுப்பு" maxlength="60">
+    </div>
+    <div class="field-group">
+      <label class="field-label">சின்னம்</label>
+      <div class="icon-grid" id="iconGrid"></div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">நிறம்</label>
+      <div class="color-grid" id="colorGrid"></div>
+    </div>
+    <div id="imgMode">
+      <div class="field-group">
+        <label class="field-label">PDF pages / படங்கள் *</label>
+        <div class="img-upload-area">
+          <input type="file" accept="image/*" multiple id="imgFileInput" onchange="handleImages(this)">
+          <div class="img-upload-icon">📸</div>
+          <div class="img-upload-title">படங்கள் தேர்வு செய்யுங்கள்</div>
+          <div class="img-upload-sub">Gallery-லிருந்து பல pages ஒரே நேரத்தில்</div>
+        </div>
+        <div class="img-preview-grid" id="previewGrid"></div>
+        <div class="img-count" id="imgCount"></div>
+      </div>
+    </div>
+    <div id="txtMode" style="display:none">
+      <div class="field-group">
+        <label class="field-label">அத்தியாயம் தலைப்பு</label>
+        <input class="field-input" id="inChTitle" placeholder="உ.தா: முதல் அத்தியாயம்" maxlength="80">
+      </div>
+      <div class="field-group">
+        <label class="field-label">உள்ளடக்கம் *</label>
+        <textarea class="field-textarea" id="inContent" placeholder="இங்கே நூலின் உள்ளடக்கத்தை தட்டச்சு பண்ணுங்கள்..."></textarea>
+      </div>
+    </div>
+    <button class="save-btn" id="saveBtn" onclick="saveBook()">✦ நூல் சேர்க்கவும்</button>
+  </div>
+</div>
+
+<!-- IMAGE READER -->
+<div id="imgReader">
+  <div class="img-reader-bar">
+    <button class="back-btn" onclick="showLibrary()">← திரும்பு</button>
+    <span class="img-reader-title" id="imgReaderTitle"></span>
+    <div class="img-reader-btns">
+      <button class="img-top-btn" id="imgBmkBtn" onclick="toggleImgBmk()">🔖</button>
+      <button class="img-top-btn" id="imgNoteBtn" onclick="openNotes('img')">📝</button>
+      <button class="img-top-btn" onclick="openBmPanel()">📑</button>
+    </div>
+  </div>
+  <div class="img-page-area" id="imgPageArea">
+    <img id="imgPageImg" src="" alt="page">
+    <div class="img-nav-overlay img-nav-left" onclick="imgNavigate(-1)"><div class="img-nav-arrow">‹</div></div>
+    <div class="img-nav-overlay img-nav-right" onclick="imgNavigate(1)"><div class="img-nav-arrow">›</div></div>
+  </div>
+  <div class="img-bottom-bar">
+    <button class="img-nav-btn" id="imgBtnPrev" onclick="imgNavigate(-1)">← முந்தைய</button>
+    <div class="img-pg-info">
+      <div class="img-pg-num" id="imgPgNum"></div>
+      <div class="img-pg-dots" id="imgDots"></div>
+    </div>
+    <button class="img-nav-btn" id="imgBtnNext" onclick="imgNavigate(1)">அடுத்து →</button>
+  </div>
+</div>
+
+<!-- TEXT READER -->
+<div id="reader">
+  <div class="reader-bar" id="readerBar">
+    <button class="back-btn" onclick="showLibrary()">← திரும்பு</button>
+    <span class="reader-title-text" id="readerTitle"></span>
+    <div class="ctrl-btns">
+      <button class="ctrl-btn" id="btnSepia" onclick="toggleTheme('sepia')" style="color:#c9932a" title="Sepia">☕</button>
+      <button class="ctrl-btn" id="btnDark" onclick="toggleTheme('dark')" style="color:#aaa" title="Dark">🌙</button>
+      <button class="ctrl-btn" id="btnBmk" onclick="toggleBmk()" style="color:#aaa" title="Bookmark"><span class="ctrl-btn-badge"></span>🔖</button>
+      <button class="ctrl-btn" id="btnNote" onclick="openNotes('txt')" style="color:#aaa" title="Notes"><span class="ctrl-btn-badge"></span>📝</button>
+      <button class="ctrl-btn" onclick="openBmPanel()" style="color:#aaa" title="All bookmarks">📑</button>
+    </div>
+  </div>
+  <div class="prog-line" id="progLine"><div class="prog-active" id="progActive"></div></div>
+  <div class="content" id="contentArea">
+    <div class="ch-header" id="chHeader">
+      <div class="ch-label" id="chLabel"></div>
+      <div class="ch-title" id="chTitle"></div>
+      <div class="ch-orn">❧ · · · ❧</div>
+    </div>
+    <div class="page-text" id="pageText" style="font-size:17px;line-height:2"></div>
+    <div id="noteIndicator" style="display:none" class="page-note-indicator" onclick="openNotes('txt')"></div>
+    <div class="font-ctrl" id="fontCtrl">
+      <button class="font-btn" id="fMinus" onclick="chgFont(-1)">A−</button>
+      <span class="font-val" id="fVal">17</span>
+      <button class="font-btn" id="fPlus" onclick="chgFont(1)">A+</button>
+    </div>
+  </div>
+  <div class="nav-bar" id="navBar">
+    <button class="nav-btn" id="btnPrev" onclick="navigate(-1)">← முந்தைய</button>
+    <div class="nav-info">
+      <div class="nav-pg" id="navPg"></div>
+      <div class="nav-pct" id="navPct"></div>
+    </div>
+    <button class="nav-btn" id="btnNext" onclick="navigate(1)">அடுத்து →</button>
+  </div>
+</div>
+
+<script>
+const ICONS=["📜","🧘","🏺","🏹","🌸","🦚","🪔","🌙","⭐","🔱","🕉️","📖"];
+const COLORS=[["#7a1f2e","#a84432"],["#1a4a3a","#2d7a5a"],["#2a1a5a","#5a2d9a"],["#3a1a5a","#6b2d8b"],["#1a3a5a","#2d6a9a"],["#5a3a1a","#9a6a2d"],["#1a5a3a","#2d9a6a"],["#5a1a3a","#9a2d6a"]];
+let selIcon=ICONS[0],selColor=COLORS[0],addType="img",uploadedImgs=[];
+let curBook=null,chIdx=0,pgIdx=0,fontSize=17,theme="light",progress={};
+let imgCurPage=0,curImgBook=null,txStart=null,nextId=10,editMode=false,editingBookId=null;
+
+// DATA STORES
+let bookmarks={};  // {bookId: [{ch,pg,chTitle,label}]}
+let notes={};      // {bookId: {pageKey: [{text,ts}]}}
+
+const BOOKS=[
+  {id:1,title:"சித்து விளையாடல்கள்",author:"அறிஞர் தொகுப்பு",color:["#3a1a5a","#6b2d8b"],icon:"🧘",type:"txt",
+   chapters:[
+    {label:"அத்தியாயம் 1",title:"அற்புதங்கள் ஆயிரம்",pages:[
+      ["'சித்தி' என்றால் வெற்றி என்று பொருள். யோகத்தில் வெற்றி; எடுத்த காரியத்தில், நினைத்ததில் வெற்றி எனலாம். மனோசக்தியால் அற்புதம் புரிவதில் வெற்றி என்றெல்லாம் கூறலாம்.","யோகிகள், துறவிகள், தவசிகள், பக்தர்கள் இப்படி சித்து விளையாடி யுள்ளனர். திரிமின்றி, பெரு முயற்சியின்றி எளிதாகப் பிறர் மகிழ்ந்து வியக்கும்படி சித்துகள் புரிவதைச் சித்திவிளையாடல் என்பது வழக்கம்."],
+      ["இம்முறையில் செய்யப்படுவதெல்லாம் அற்புதம் ஆகும். கண்களால் காணமுடியாததைக் கண்டு கூறுவது, தொடாமல் எடுத்தல், இழுத்தல் ஆகியவை அதிசயங்களாகும்."]
+    ]},
+    {label:"அத்தியாயம் 2",title:"மனோசக்தியின் மாயம்",pages:[
+      ["மனோசக்தி என்பது உறுதியான மன நிலை. நினைத்ததை முடிப்பது — ஒன்றைத் தொடங்கினால் பாதியில் விட்டு விடாமல் முடிக்கும்வரை பிடித்துக் கொண்டிருக்கும் திறன்.","தொடாமல் திடப்பொருளை நகர்த்துதல், பூமிக்கு மேலே எழும்புதல் போன்ற பல அற்புதங்கள் மனிதரால் செய்து காட்டப்பட்டுள்ளன."]
+    ]},
+    {label:"அத்தியாயம் 3",title:"எட்டு மகா சித்திகள்",pages:[
+      ["எட்டு மகா சித்திகள்: 1) அணிமா 2) மஹிமா 3) இலஷிமா 4) கரிமா 5) பிராப்தி 6) வசித்வம் 7) பிராகாமியம் 8) ஈசத்வம்.","அணிமா — அணுபோலச் சிறிய வடிவெடுப்பது. மஹிமா — மலைபோல் பெரிய வடிவெடுப்பது."]
+    ]}
+  ]},
+  {id:2,title:"திருக்குறள்",author:"திருவள்ளுவர்",color:["#7a1f2e","#a84432"],icon:"📜",type:"txt",
+   chapters:[{label:"அறத்துப்பால்",title:"கடவுள் வாழ்த்து",pages:[
+    ["அகர முதல எழுத்தெல்லாம் ஆதி பகவன் முதற்றே உலகு.","கற்றதனால் ஆய பயனென்கொல் வாலறிவன் நற்றாள் தொழாஅர் எனின்."],
+    ["வேண்டுதல் வேண்டாமை இலானடி சேர்ந்தார்க்கு யாண்டும் இடும்பை இல."]
+  ]}]},
+  {id:3,title:"சிலப்பதிகாரம்",author:"இளங்கோவடிகள்",color:["#1a4a3a","#2d7a5a"],icon:"🏺",type:"txt",
+   chapters:[{label:"புகார் காண்டம்",title:"மங்கல வாழ்த்து",pages:[
+    ["திங்களைப் போற்றுதும் திங்களைப் போற்றுதும்.","கண்ணகி மதுரை மன்னன் முன்னே சென்று தன் கணவன் கள்வன் அல்ல என்று நிரூபித்தாள்."]
+  ]}]},
+  {id:4,title:"கம்பராமாயணம்",author:"கம்பர்",color:["#2a1a5a","#5a2d9a"],icon:"🏹",type:"txt",
+   chapters:[{label:"பாலகாண்டம்",title:"இராமன் அவதாரம்",pages:[
+    ["உலகம் யாவையும் தாமுள வாக்கலும் நிலைபெறுத்தலும் — அலகிலா விளையாட்டுடையார் அவர்.","இராமன் சீதையை மணந்தான். கைகேயி தன் வரம் கேட்டாள். இராமன் காட்டிற்கு சென்றான்."]
+  ]}]}
+];
+
+const TH={
+  light:{bg:"#fdf6e3",text:"#2a1f0e",bar:"#1a1209",border:"rgba(26,18,9,0.09)",sub:"rgba(26,18,9,0.4)",foot:"rgba(253,246,227,0.97)",card:"rgba(26,18,9,0.04)",progBg:"rgba(26,18,9,0.09)"},
+  sepia:{bg:"#eddfc0",text:"#3a2a0a",bar:"#2a1a08",border:"rgba(58,42,10,0.1)",sub:"rgba(58,42,10,0.4)",foot:"rgba(237,223,192,0.97)",card:"rgba(58,42,10,0.06)",progBg:"rgba(58,42,10,0.1)"},
+  dark:{bg:"#111008",text:"#d8c8a0",bar:"#080603",border:"rgba(216,200,160,0.08)",sub:"rgba(216,200,160,0.38)",foot:"rgba(17,16,8,0.97)",card:"rgba(216,200,160,0.05)",progBg:"rgba(216,200,160,0.08)"}
+};
+
+// ── BOOKMARK HELPERS ──
+function pageKey(b,ch,pg){return `${b.id}_${ch}_${pg}`;}
+function isBookmarked(b,ch,pg){return (bookmarks[b.id]||[]).some(x=>x.ch===ch&&x.pg===pg);}
+
+function toggleBmk(){
+  const b=curBook;
+  if(!bookmarks[b.id]) bookmarks[b.id]=[];
+  const exists=isBookmarked(b,chIdx,pgIdx);
+  if(exists){
+    bookmarks[b.id]=bookmarks[b.id].filter(x=>!(x.ch===chIdx&&x.pg===pgIdx));
+  } else {
+    const ch=b.chapters[chIdx];
+    let gp=0;for(let i=0;i<chIdx;i++)gp+=b.chapters[i].pages.length;gp+=pgIdx+1;
+    bookmarks[b.id].push({ch:chIdx,pg:pgIdx,chTitle:ch.title,label:`${ch.label} — பக்கம் ${gp}`});
+  }
+  updateBmkBtn();
+  renderGrid();
+}
+
+function toggleImgBmk(){
+  const b=curImgBook;
+  if(!bookmarks[b.id]) bookmarks[b.id]=[];
+  const exists=(bookmarks[b.id]||[]).some(x=>x.pg===imgCurPage);
+  if(exists){bookmarks[b.id]=bookmarks[b.id].filter(x=>x.pg!==imgCurPage);}
+  else{bookmarks[b.id].push({pg:imgCurPage,chTitle:"",label:`பக்கம் ${imgCurPage+1}`});}
+  document.getElementById("imgBmkBtn").classList.toggle("active",!exists);
+  renderGrid();
+}
+
+function updateBmkBtn(){
+  const bm=isBookmarked(curBook,chIdx,pgIdx);
+  const btn=document.getElementById("btnBmk");
+  btn.classList.toggle("active",bm);
+  btn.style.color=bm?"#c9932a":"#aaa";
+}
+
+function openBmPanel(){
+  const b=curBook||curImgBook;
+  if(!b) return;
+  const bms=bookmarks[b.id]||[];
+  const list=document.getElementById("bmList");
+  list.innerHTML="";
+  if(bms.length===0){list.innerHTML='<div class="bm-empty">📌 இன்னும் புக்மார்க் இல்லை<br><span style="font-size:.7rem">🔖 button press பண்ணி சேர்க்கலாம்</span></div>';
+  } else {
+    bms.forEach((bm,i)=>{
+      const div=document.createElement("div");div.className="bm-item";
+      div.innerHTML=`<div class="bm-item-left"><div class="bm-item-ch">${bm.chTitle||""}</div><div class="bm-item-title">${bm.label}</div></div><button class="bm-item-del" onclick="event.stopPropagation();deleteBm(${i})">🗑️</button>`;
+      div.onclick=()=>{
+        closeBm();
+        if(curBook){chIdx=bm.ch;pgIdx=bm.pg;renderPage();}
+        else if(curImgBook){imgCurPage=bm.pg;renderImgPage();}
+      };
+      list.appendChild(div);
+    });
+  }
+  document.getElementById("bmPanel").classList.add("show");
+}
+
+function deleteBm(i){
+  const b=curBook||curImgBook;
+  if(b&&bookmarks[b.id]) bookmarks[b.id].splice(i,1);
+  openBmPanel();
+  updateBmkBtn();
+}
+
+function closeBm(e){
+  if(e&&e.target!==document.getElementById("bmPanel"))return;
+  document.getElementById("bmPanel").classList.remove("show");
+}
+
+// ── NOTES HELPERS ──
+function getCurPageKey(){
+  if(curBook) return pageKey(curBook,chIdx,pgIdx);
+  if(curImgBook) return `${curImgBook.id}_img_${imgCurPage}`;
+  return null;
+}
+
+function openNotes(mode){
+  const b=curBook||curImgBook;if(!b)return;
+  const key=getCurPageKey();
+  const bNotes=(notes[b.id]||{})[key]||[];
+  const list=document.getElementById("notesList");
+  list.innerHTML="";
+
+  let pgLabel="";
+  if(curBook){let gp=0;for(let i=0;i<chIdx;i++)gp+=curBook.chapters[i].pages.length;gp+=pgIdx+1;pgLabel=`${curBook.chapters[chIdx].label} — பக்கம் ${gp}`;}
+  else pgLabel=`பக்கம் ${imgCurPage+1}`;
+  document.getElementById("notePageInfo").textContent=`📍 ${pgLabel}`;
+  document.getElementById("noteInput").value="";
+
+  if(bNotes.length===0){
+    list.innerHTML='<div style="color:rgba(240,224,192,.3);font-size:.78rem;font-style:italic;text-align:center;padding:14px 0">இன்னும் குறிப்பு இல்லை — கீழே எழுதுங்கள்!</div>';
+  } else {
+    bNotes.forEach((n,i)=>{
+      const d=document.createElement("div");d.className="note-item";
+      const dt=new Date(n.ts);const timeStr=`${dt.getDate()}/${dt.getMonth()+1} ${dt.getHours()}:${String(dt.getMinutes()).padStart(2,"0")}`;
+      d.innerHTML=`<div class="note-item-pg">${pgLabel} · ${timeStr}</div><div class="note-item-text">${n.text}</div><button class="note-item-del" onclick="deleteNote('${key}',${i})">🗑️</button>`;
+      list.appendChild(d);
+    });
+  }
+  document.getElementById("notesPanel").classList.add("show");
+}
+
+function saveNote(){
+  const b=curBook||curImgBook;if(!b)return;
+  const txt=document.getElementById("noteInput").value.trim();
+  if(!txt) return;
+  const key=getCurPageKey();
+  if(!notes[b.id]) notes[b.id]={};
+  if(!notes[b.id][key]) notes[b.id][key]=[];
+  notes[b.id][key].push({text:txt,ts:Date.now()});
+  document.getElementById("noteInput").value="";
+  openNotes();
+  updateNoteIndicator();
+  updateNoteBadge();
+}
+
+function deleteNote(key,i){
+  const b=curBook||curImgBook;if(!b)return;
+  if(notes[b.id]&&notes[b.id][key]) notes[b.id][key].splice(i,1);
+  openNotes();
+  updateNoteIndicator();
+  updateNoteBadge();
+}
+
+function closeNotes(e){
+  if(e&&e.target!==document.getElementById("notesPanel"))return;
+  document.getElementById("notesPanel").classList.remove("show");
+}
+
+function updateNoteIndicator(){
+  if(!curBook)return;
+  const key=getCurPageKey();
+  const n=(notes[curBook.id]||{})[key]||[];
+  const ind=document.getElementById("noteIndicator");
+  if(n.length>0){ind.style.display="block";ind.textContent=`📝 ${n.length} குறிப்பு${n.length>1?"கள்":""} — தொட்டு பார்க்கவும்`;}
+  else{ind.style.display="none";}
+}
+
+function updateNoteBadge(){
+  if(!curBook)return;
+  const key=getCurPageKey();
+  const hasNotes=((notes[curBook.id]||{})[key]||[]).length>0;
+  document.getElementById("btnNote").classList.toggle("has-badge",hasNotes);
+}
+
+// ── LIBRARY ──
+function toggleEditMode(){
+  editMode=!editMode;
+  document.getElementById("editModeBtn").classList.toggle("active",editMode);
+  document.getElementById("editModeBtn").textContent=editMode?"✓ முடிந்தது":"✏️ திருத்து / நீக்கு";
+  document.getElementById("bookGrid").classList.toggle("edit-mode",editMode);
+}
+
+function confirmDelete(id){
+  const book=BOOKS.find(b=>b.id===id);
+  document.getElementById("dialogTitle").textContent=`"${book.title}" நீக்கவா?`;
+  document.getElementById("dialogConfirmBtn").onclick=()=>{BOOKS.splice(BOOKS.findIndex(b=>b.id===id),1);closeDialog();renderGrid();};
+  document.getElementById("confirmDialog").classList.add("show");
+}
+
+function closeDialog(){document.getElementById("confirmDialog").classList.remove("show");}
+
+function renderGrid(){
+  const grid=document.getElementById("bookGrid");grid.innerHTML="";
+  if(editMode) grid.classList.add("edit-mode");
+  BOOKS.forEach((b,i)=>{
+    const tot=b.type==="img"?b.images.length:b.chapters.reduce((s,c)=>s+c.pages.length,0);
+    const done=progress[b.id]||0;
+    const pct=Math.round((done/tot)*100);
+    const bms=bookmarks[b.id]||[];
+    const hasBm=bms.length>0;
+    const lastBm=bms[bms.length-1];
+    const div=document.createElement("div");div.className="book-card";div.style.animationDelay=(Math.min(i,5)*0.07)+"s";
+    div.innerHTML=`
+      ${hasBm?`<div class="bookmark-badge">🔖</div>`:""}
+      <div class="card-edit-overlay">
+        <button class="card-action-btn btn-edit-book" onclick="event.stopPropagation();editBook(${b.id})">✏️ திருத்து</button>
+        <button class="card-action-btn btn-del-book" onclick="event.stopPropagation();confirmDelete(${b.id})">🗑️ நீக்கு</button>
+      </div>
+      <div class="book-card-inner">
+        <div class="book-cover" style="background:linear-gradient(135deg,${b.color[0]},${b.color[1]})">
+          <div class="book-spine-bar"></div>
+          <div class="cover-icon">${b.icon}</div>
+          <div class="cover-title">${b.title}</div>
+        </div>
+        <div class="book-info">
+          <div class="book-name">${b.title}</div>
+          <div class="book-author">${b.author}</div>
+          <span class="book-type ${b.type==="img"?"type-img":"type-txt"}">${b.type==="img"?"🖼️ படங்கள்":"✍️ உரை"}</span>
+          <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+          ${pct>0?`<div class="prog-pct">${pct}% படித்தது</div>`:""}
+          ${lastBm?`<div class="continue-bar">🔖 ${lastBm.label} — தொடரவும்</div>`:""}
+        </div>
+      </div>`;
+    div.onclick=()=>{
+      if(editMode)return;
+      if(b.type==="img") openImgBook(b);
+      else openBook(b);
+    };
+    grid.appendChild(div);
+  });
+}
+
+// ── ADD / EDIT ──
+function showAdd(){
+  editingBookId=null;
+  document.getElementById("addBarTitle").textContent="புதிய நூல்";
+  document.getElementById("saveBtn").textContent="✦ நூல் சேர்க்கவும்";
+  document.getElementById("typeTabs").style.pointerEvents="";document.getElementById("typeTabs").style.opacity="";
+  document.getElementById("library").style.display="none";
+  document.getElementById("addScreen").style.display="flex";
+  document.getElementById("inTitle").value="";document.getElementById("inAuthor").value="";
+  document.getElementById("inChTitle").value="";document.getElementById("inContent").value="";
+  document.getElementById("previewGrid").innerHTML="";document.getElementById("imgCount").textContent="";
+  uploadedImgs=[];selIcon=ICONS[0];selColor=COLORS[0];switchType("img");initAddScreen();
+}
+
+function editBook(id){
+  const book=BOOKS.find(b=>b.id===id);if(!book)return;
+  editingBookId=id;
+  document.getElementById("addBarTitle").textContent="நூல் திருத்து";
+  document.getElementById("saveBtn").textContent="✦ மாற்றங்கள் சேமி";
+  document.getElementById("library").style.display="none";
+  document.getElementById("addScreen").style.display="flex";
+  document.getElementById("inTitle").value=book.title;
+  document.getElementById("inAuthor").value=book.author;
+  addType=book.type;
+  document.getElementById("tabImg").classList.toggle("active",book.type==="img");
+  document.getElementById("tabTxt").classList.toggle("active",book.type==="txt");
+  document.getElementById("imgMode").style.display=book.type==="img"?"block":"none";
+  document.getElementById("txtMode").style.display=book.type==="txt"?"block":"none";
+  document.getElementById("typeTabs").style.pointerEvents="none";document.getElementById("typeTabs").style.opacity=".5";
+  if(book.type==="txt"&&book.chapters?.length>0){
+    document.getElementById("inChTitle").value=book.chapters[0].title||"";
+    document.getElementById("inContent").value=book.chapters[0].pages.map(pg=>pg.join("\n")).join("\n");
+  }
+  if(book.type==="img"){uploadedImgs=[...book.images];renderPreview();}
+  selIcon=book.icon;selColor=book.color;initAddScreen();
+}
+
+function initAddScreen(){
+  const ig=document.getElementById("iconGrid");ig.innerHTML="";
+  ICONS.forEach(ic=>{const d=document.createElement("div");d.className="icon-opt"+(ic===selIcon?" sel":"");d.textContent=ic;d.onclick=()=>{selIcon=ic;document.querySelectorAll(".icon-opt").forEach(x=>x.classList.remove("sel"));d.classList.add("sel");};ig.appendChild(d);});
+  const cg=document.getElementById("colorGrid");cg.innerHTML="";
+  COLORS.forEach(cl=>{const d=document.createElement("div");d.className="color-opt"+(JSON.stringify(cl)===JSON.stringify(selColor)?" sel":"");d.style.background=`linear-gradient(135deg,${cl[0]},${cl[1]})`;d.onclick=()=>{selColor=cl;document.querySelectorAll(".color-opt").forEach(x=>x.classList.remove("sel"));d.classList.add("sel");};cg.appendChild(d);});
+}
+
+function switchType(t){addType=t;document.getElementById("tabImg").classList.toggle("active",t==="img");document.getElementById("tabTxt").classList.toggle("active",t==="txt");document.getElementById("imgMode").style.display=t==="img"?"block":"none";document.getElementById("txtMode").style.display=t==="txt"?"block":"none";}
+
+function handleImages(input){
+  const files=Array.from(input.files);uploadedImgs=[];document.getElementById("previewGrid").innerHTML="";
+  let loaded=0;
+  files.forEach((f,i)=>{const r=new FileReader();r.onload=e=>{uploadedImgs[i]=e.target.result;loaded++;renderPreview();if(loaded===files.length)document.getElementById("imgCount").textContent=`${loaded} படங்கள் ✓`;};r.readAsDataURL(f);});
+}
+
+function renderPreview(){
+  const grid=document.getElementById("previewGrid");grid.innerHTML="";
+  uploadedImgs.forEach((src,i)=>{if(!src)return;const t=document.createElement("div");t.className="img-thumb";t.innerHTML=`<img src="${src}"><button class="img-thumb-del" onclick="removeImg(${i})">✕</button>`;grid.appendChild(t);});
+  const c=uploadedImgs.filter(Boolean).length;if(c>0)document.getElementById("imgCount").textContent=`${c} படங்கள் ✓`;
+}
+
+function removeImg(i){uploadedImgs.splice(i,1);renderPreview();}
+
+function saveBook(){
+  const title=document.getElementById("inTitle").value.trim();if(!title){alert("நூல் தலைப்பு கொடுங்கள்!");return;}
+  const author=document.getElementById("inAuthor").value.trim()||"ஆசிரியர் அறியப்படவில்லை";
+  if(editingBookId){
+    const idx=BOOKS.findIndex(b=>b.id===editingBookId);
+    if(idx>-1){BOOKS[idx].title=title;BOOKS[idx].author=author;BOOKS[idx].icon=selIcon;BOOKS[idx].color=selColor;
+      if(addType==="txt"){const content=document.getElementById("inContent").value.trim();const chTitle=document.getElementById("inChTitle").value.trim()||"அத்தியாயம் 1";if(content){const lines=content.split("\n").map(l=>l.trim()).filter(l=>l.length>0);const pages=[];for(let i=0;i<lines.length;i+=4)pages.push(lines.slice(i,i+4));BOOKS[idx].chapters=[{label:"அத்தியாயம் 1",title:chTitle,pages}];}}
+      else if(addType==="img"&&uploadedImgs.filter(Boolean).length>0){BOOKS[idx].images=uploadedImgs.filter(Boolean);}
+    }
+  } else {
+    if(addType==="img"){const imgs=uploadedImgs.filter(Boolean);if(imgs.length===0){alert("படம் தேர்வு செய்யுங்கள்!");return;}BOOKS.unshift({id:nextId++,title,author,color:selColor,icon:selIcon,type:"img",images:imgs});}
+    else{const content=document.getElementById("inContent").value.trim();if(!content){alert("உள்ளடக்கம் தட்டச்சு பண்ணுங்கள்!");return;}const chTitle=document.getElementById("inChTitle").value.trim()||"அத்தியாயம் 1";const lines=content.split("\n").map(l=>l.trim()).filter(l=>l.length>0);const pages=[];for(let i=0;i<lines.length;i+=4)pages.push(lines.slice(i,i+4));BOOKS.unshift({id:nextId++,title,author,color:selColor,icon:selIcon,type:"txt",chapters:[{label:"அத்தியாயம் 1",title:chTitle,pages}]});}
+  }
+  document.getElementById("typeTabs").style.pointerEvents="";document.getElementById("typeTabs").style.opacity="";
+  uploadedImgs=[];editingBookId=null;editMode=false;showLibrary();
+}
+
+// ── IMAGE READER ──
+function openImgBook(b){
+  curImgBook=b;curBook=null;imgCurPage=0;
+  document.getElementById("library").style.display="none";
+  const r=document.getElementById("imgReader");r.style.display="flex";
+  document.getElementById("imgReaderTitle").textContent=b.title;
+  renderImgPage();
+  r.ontouchstart=e=>{txStart=e.touches[0].clientX};
+  r.ontouchend=e=>{if(txStart===null)return;const dx=txStart-e.changedTouches[0].clientX;if(Math.abs(dx)>50)imgNavigate(dx>0?1:-1);txStart=null;};
+}
+
+function renderImgPage(){
+  const imgs=curImgBook.images,total=imgs.length;
+  document.getElementById("imgPageImg").src=imgs[imgCurPage];
+  document.getElementById("imgPgNum").textContent=`${imgCurPage+1} / ${total}`;
+  document.getElementById("imgBtnPrev").disabled=imgCurPage===0;
+  document.getElementById("imgBtnNext").disabled=imgCurPage===total-1;
+  document.getElementById("imgBmkBtn").classList.toggle("active",(bookmarks[curImgBook.id]||[]).some(x=>x.pg===imgCurPage));
+  const dots=document.getElementById("imgDots");dots.innerHTML="";
+  const show=Math.min(total,15),start=Math.max(0,Math.min(imgCurPage-7,total-show));
+  for(let i=start;i<start+show;i++){const d=document.createElement("div");d.className="img-dot"+(i===imgCurPage?" active":"");d.onclick=(idx=>()=>{imgCurPage=idx;renderImgPage();})(i);dots.appendChild(d);}
+  progress[curImgBook.id]=imgCurPage+1;
+}
+
+function imgNavigate(dir){imgCurPage=Math.max(0,Math.min(curImgBook.images.length-1,imgCurPage+dir));renderImgPage();}
+
+// ── TEXT READER ──
+function applyTheme(){
+  const t=TH[theme],r=document.getElementById("reader");
+  r.style.background=t.bg;r.style.color=t.text;
+  document.getElementById("readerBar").style.background=t.bar;
+  document.getElementById("navBar").style.background=t.foot;
+  document.getElementById("navBar").style.borderTop="1px solid "+t.border;
+  document.getElementById("chHeader").style.borderBottom="1px solid "+t.border;
+  document.getElementById("fontCtrl").style.borderTop="1px solid "+t.border;
+  document.getElementById("pageText").style.color=t.text;
+  document.getElementById("chTitle").style.color=t.text;
+  const bs=`background:${t.card};border:1px solid ${t.border};color:${t.text};width:40px;height:40px;border-radius:10px;font-size:1rem;cursor:pointer`;
+  document.getElementById("fMinus").style.cssText=bs;document.getElementById("fPlus").style.cssText=bs;
+  document.getElementById("fVal").style.color=t.sub;document.getElementById("navPg").style.color=t.sub;
+  document.getElementById("progLine").style.background=t.progBg;updateNavBtns();
+}
+
+function updateNavBtns(){
+  const t=TH[theme],prev=document.getElementById("btnPrev"),next=document.getElementById("btnNext");
+  const isFirst=chIdx===0&&pgIdx===0,isLast=curBook&&chIdx===curBook.chapters.length-1&&pgIdx===curBook.chapters[chIdx].pages.length-1;
+  const on=`flex:1;font-family:Georgia,serif;font-style:italic;font-size:.86rem;padding:12px 0;border-radius:10px;cursor:pointer;background:${t.bar};color:#f0e0c0;border:none`;
+  const off=`flex:1;font-family:Georgia,serif;font-style:italic;font-size:.86rem;padding:12px 0;border-radius:10px;cursor:default;opacity:0.35;background:transparent;color:${t.sub};border:1px solid ${t.border}`;
+  prev.style.cssText=isFirst?off:on;next.style.cssText=isLast?off:on;prev.disabled=isFirst;next.disabled=isLast;
+}
+
+function openBook(b){
+  curBook=b;curImgBook=null;chIdx=0;pgIdx=0;
+  document.getElementById("library").style.display="none";
+  const r=document.getElementById("reader");r.style.display="flex";
+  document.getElementById("readerTitle").textContent=b.title;
+  applyTheme();renderPage();
+  r.ontouchstart=e=>{txStart=e.touches[0].clientX};
+  r.ontouchend=e=>{if(txStart===null)return;const dx=txStart-e.changedTouches[0].clientX;if(Math.abs(dx)>50)navigate(dx>0?1:-1);txStart=null;};
+}
+
+function renderPage(){
+  const ch=curBook.chapters[chIdx],paras=ch.pages[pgIdx];
+  document.getElementById("chLabel").textContent=ch.label;document.getElementById("chTitle").textContent=ch.title;
+  const pt=document.getElementById("pageText");pt.style.fontSize=fontSize+"px";
+  pt.innerHTML=paras.map((p,i)=>{
+    if(i===0&&p.length>1)return`<p><span class="drop-cap" style="font-size:${fontSize*3}px">${p[0]}</span>${p.slice(1)}</p>`;
+    return`<p>${p}</p>`;
+  }).join("");
+  document.getElementById("fVal").textContent=fontSize;
+  let gp=0;for(let i=0;i<chIdx;i++)gp+=curBook.chapters[i].pages.length;gp+=pgIdx+1;
+  const tot=curBook.chapters.reduce((s,c)=>s+c.pages.length,0),pct=Math.round((gp/tot)*100);
+  document.getElementById("progActive").style.width=pct+"%";document.getElementById("navPg").textContent=gp+"/"+tot;document.getElementById("navPct").textContent=pct+"%";
+  progress[curBook.id]=gp;
+  updateBmkBtn();updateNoteIndicator();updateNoteBadge();updateNavBtns();
+  document.getElementById("contentArea").scrollTop=0;
+}
+
+function navigate(dir){
+  if(!curBook)return;const ch=curBook.chapters[chIdx];
+  if(dir===1){if(pgIdx<ch.pages.length-1)pgIdx++;else if(chIdx<curBook.chapters.length-1){chIdx++;pgIdx=0;}}
+  else{if(pgIdx>0)pgIdx--;else if(chIdx>0){chIdx--;pgIdx=curBook.chapters[chIdx].pages.length-1;}}
+  renderPage();
+}
+
+function chgFont(d){fontSize=Math.min(26,Math.max(13,fontSize+d));renderPage();}
+function toggleTheme(t){theme=theme===t?"light":t;document.getElementById("btnSepia").classList.toggle("active",theme==="sepia");document.getElementById("btnDark").classList.toggle("active",theme==="dark");applyTheme();}
+
+function showLibrary(){
+  curBook=null;curImgBook=null;
+  ["reader","imgReader","addScreen"].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display="none";});
+  document.getElementById("library").style.display="flex";
+  editMode=false;renderGrid();
+}
+
+renderGrid();
+</script>
+</body>
+</html>
