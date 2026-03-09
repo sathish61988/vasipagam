@@ -11,7 +11,6 @@ body{font-family:Georgia,serif;background:#0f0a04;min-height:100vh;overflow-x:hi
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
 
-/* LIBRARY */
 #library{min-height:100vh;padding:44px 16px 80px;display:flex;flex-direction:column;align-items:center}
 .lib-title{font-size:2.1rem;color:#c9932a;font-weight:700;letter-spacing:.04em;text-align:center}
 .lib-sub{color:rgba(245,234,214,.32);font-size:.76rem;font-style:italic;margin-top:4px;letter-spacing:.1em;text-align:center}
@@ -46,8 +45,12 @@ body{font-family:Georgia,serif;background:#0f0a04;min-height:100vh;overflow-x:hi
 .add-btn{margin-top:20px;width:100%;max-width:340px;padding:14px;border-radius:13px;border:1px dashed rgba(201,147,42,.5);background:rgba(201,147,42,.07);color:#c9932a;font-family:Georgia,serif;font-size:.9rem;cursor:pointer;text-align:center}
 .add-btn:active{background:rgba(201,147,42,.14)}
 
+/* SAVE TOAST */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(30,20,5,.95);border:1px solid rgba(201,147,42,.4);color:#c9932a;padding:10px 20px;border-radius:20px;font-size:.8rem;font-style:italic;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
 /* DIALOGS */
-.dialog-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-end;justify-content:center;padding:0}
+.dialog-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-end;justify-content:center}
 .dialog-overlay.show{display:flex;animation:fadeIn .2s}
 .dialog-box{background:#1a1209;border:1px solid rgba(201,147,42,.3);border-radius:20px 20px 0 0;padding:20px 20px 36px;width:100%;max-width:480px;animation:slideUp .25s ease}
 .dialog-icon{font-size:1.8rem;margin-bottom:8px;text-align:center}
@@ -71,7 +74,6 @@ body{font-family:Georgia,serif;background:#0f0a04;min-height:100vh;overflow-x:hi
 .note-item-pg{color:rgba(201,147,42,.55);font-size:.62rem;font-style:italic;margin-bottom:3px}
 .note-item-text{color:#f0e0c0;font-size:.82rem;line-height:1.5}
 .note-item-del{position:absolute;top:8px;right:8px;background:none;border:none;color:rgba(240,100,80,.5);font-size:.8rem;cursor:pointer;padding:2px 5px}
-.note-item-del:active{color:rgba(240,100,80,1)}
 .notes-input-area{border-top:1px solid rgba(201,147,42,.15);padding-top:12px}
 .notes-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(201,147,42,.25);border-radius:10px;padding:10px 12px;color:#f0e0c0;font-family:Georgia,serif;font-size:.85rem;outline:none;resize:none;height:80px;line-height:1.6}
 .notes-textarea:focus{border-color:rgba(201,147,42,.6)}
@@ -85,17 +87,15 @@ body{font-family:Georgia,serif;background:#0f0a04;min-height:100vh;overflow-x:hi
 .bm-title{color:#c9932a;font-size:.95rem;font-weight:600}
 .bm-close{background:none;border:none;color:rgba(240,224,192,.5);font-size:1.3rem;cursor:pointer;padding:2px 6px}
 .bm-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
-.bm-item{background:rgba(255,255,255,.04);border:1px solid rgba(201,147,42,.15);border-radius:10px;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .15s}
+.bm-item{background:rgba(255,255,255,.04);border:1px solid rgba(201,147,42,.15);border-radius:10px;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
 .bm-item:active{background:rgba(201,147,42,.1)}
 .bm-item-left{flex:1}
 .bm-item-ch{color:#c9932a;font-size:.72rem;font-style:italic}
 .bm-item-title{color:#f0e0c0;font-size:.82rem;margin-top:2px}
-.bm-item-pg{color:rgba(240,224,192,.4);font-size:.64rem;margin-top:2px}
 .bm-item-del{background:none;border:none;color:rgba(240,100,80,.4);font-size:.9rem;cursor:pointer;padding:4px 7px}
-.bm-item-del:active{color:rgba(240,100,80,1)}
 .bm-empty{color:rgba(240,224,192,.3);font-size:.8rem;font-style:italic;text-align:center;padding:20px 0}
 
-/* ADD/EDIT SCREEN */
+/* ADD/EDIT */
 #addScreen{display:none;min-height:100vh;background:#0f0a04;flex-direction:column}
 .add-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;background:#080603;flex-shrink:0}
 .add-bar-title{color:#c9932a;font-size:1rem;font-weight:600}
@@ -182,6 +182,8 @@ body{font-family:Georgia,serif;background:#0f0a04;min-height:100vh;overflow-x:hi
 </style>
 </head>
 <body>
+
+<div class="toast" id="toast"></div>
 
 <!-- LIBRARY -->
 <div id="library">
@@ -304,7 +306,7 @@ body{font-family:Georgia,serif;background:#0f0a04;min-height:100vh;overflow-x:hi
       <button class="img-top-btn" onclick="openBmPanel()">📑</button>
     </div>
   </div>
-  <div class="img-page-area" id="imgPageArea">
+  <div class="img-page-area">
     <img id="imgPageImg" src="" alt="page">
     <div class="img-nav-overlay img-nav-left" onclick="imgNavigate(-1)"><div class="img-nav-arrow">‹</div></div>
     <div class="img-nav-overlay img-nav-right" onclick="imgNavigate(1)"><div class="img-nav-arrow">›</div></div>
@@ -325,11 +327,11 @@ body{font-family:Georgia,serif;background:#0f0a04;min-height:100vh;overflow-x:hi
     <button class="back-btn" onclick="showLibrary()">← திரும்பு</button>
     <span class="reader-title-text" id="readerTitle"></span>
     <div class="ctrl-btns">
-      <button class="ctrl-btn" id="btnSepia" onclick="toggleTheme('sepia')" style="color:#c9932a" title="Sepia">☕</button>
-      <button class="ctrl-btn" id="btnDark" onclick="toggleTheme('dark')" style="color:#aaa" title="Dark">🌙</button>
-      <button class="ctrl-btn" id="btnBmk" onclick="toggleBmk()" style="color:#aaa" title="Bookmark"><span class="ctrl-btn-badge"></span>🔖</button>
-      <button class="ctrl-btn" id="btnNote" onclick="openNotes('txt')" style="color:#aaa" title="Notes"><span class="ctrl-btn-badge"></span>📝</button>
-      <button class="ctrl-btn" onclick="openBmPanel()" style="color:#aaa" title="All bookmarks">📑</button>
+      <button class="ctrl-btn" id="btnSepia" onclick="toggleTheme('sepia')" style="color:#c9932a">☕</button>
+      <button class="ctrl-btn" id="btnDark" onclick="toggleTheme('dark')" style="color:#aaa">🌙</button>
+      <button class="ctrl-btn" id="btnBmk" onclick="toggleBmk()" style="color:#aaa"><span class="ctrl-btn-badge"></span>🔖</button>
+      <button class="ctrl-btn" id="btnNote" onclick="openNotes('txt')" style="color:#aaa"><span class="ctrl-btn-badge"></span>📝</button>
+      <button class="ctrl-btn" onclick="openBmPanel()" style="color:#aaa">📑</button>
     </div>
   </div>
   <div class="prog-line" id="progLine"><div class="prog-active" id="progActive"></div></div>
@@ -360,42 +362,48 @@ body{font-family:Georgia,serif;background:#0f0a04;min-height:100vh;overflow-x:hi
 <script>
 const ICONS=["📜","🧘","🏺","🏹","🌸","🦚","🪔","🌙","⭐","🔱","🕉️","📖"];
 const COLORS=[["#7a1f2e","#a84432"],["#1a4a3a","#2d7a5a"],["#2a1a5a","#5a2d9a"],["#3a1a5a","#6b2d8b"],["#1a3a5a","#2d6a9a"],["#5a3a1a","#9a6a2d"],["#1a5a3a","#2d9a6a"],["#5a1a3a","#9a2d6a"]];
-let selIcon=ICONS[0],selColor=COLORS[0],addType="img",uploadedImgs=[];
-let curBook=null,chIdx=0,pgIdx=0,fontSize=17,theme="light",progress={};
-let imgCurPage=0,curImgBook=null,txStart=null,nextId=10,editMode=false,editingBookId=null;
 
-// DATA STORES
-let bookmarks={};  // {bookId: [{ch,pg,chTitle,label}]}
-let notes={};      // {bookId: {pageKey: [{text,ts}]}}
-
-const BOOKS=[
-  {id:1,title:"சித்து விளையாடல்கள்",author:"அறிஞர் தொகுப்பு",color:["#3a1a5a","#6b2d8b"],icon:"🧘",type:"txt",
-   chapters:[
-    {label:"அத்தியாயம் 1",title:"அற்புதங்கள் ஆயிரம்",pages:[
-      ["'சித்தி' என்றால் வெற்றி என்று பொருள். யோகத்தில் வெற்றி; எடுத்த காரியத்தில், நினைத்ததில் வெற்றி எனலாம். மனோசக்தியால் அற்புதம் புரிவதில் வெற்றி என்றெல்லாம் கூறலாம்.","யோகிகள், துறவிகள், தவசிகள், பக்தர்கள் இப்படி சித்து விளையாடி யுள்ளனர். திரிமின்றி, பெரு முயற்சியின்றி எளிதாகப் பிறர் மகிழ்ந்து வியக்கும்படி சித்துகள் புரிவதைச் சித்திவிளையாடல் என்பது வழக்கம்."],
-      ["இம்முறையில் செய்யப்படுவதெல்லாம் அற்புதம் ஆகும். கண்களால் காணமுடியாததைக் கண்டு கூறுவது, தொடாமல் எடுத்தல், இழுத்தல் ஆகியவை அதிசயங்களாகும்."]
-    ]},
-    {label:"அத்தியாயம் 2",title:"மனோசக்தியின் மாயம்",pages:[
-      ["மனோசக்தி என்பது உறுதியான மன நிலை. நினைத்ததை முடிப்பது — ஒன்றைத் தொடங்கினால் பாதியில் விட்டு விடாமல் முடிக்கும்வரை பிடித்துக் கொண்டிருக்கும் திறன்.","தொடாமல் திடப்பொருளை நகர்த்துதல், பூமிக்கு மேலே எழும்புதல் போன்ற பல அற்புதங்கள் மனிதரால் செய்து காட்டப்பட்டுள்ளன."]
-    ]},
-    {label:"அத்தியாயம் 3",title:"எட்டு மகா சித்திகள்",pages:[
-      ["எட்டு மகா சித்திகள்: 1) அணிமா 2) மஹிமா 3) இலஷிமா 4) கரிமா 5) பிராப்தி 6) வசித்வம் 7) பிராகாமியம் 8) ஈசத்வம்.","அணிமா — அணுபோலச் சிறிய வடிவெடுப்பது. மஹிமா — மலைபோல் பெரிய வடிவெடுப்பது."]
-    ]}
-  ]},
-  {id:2,title:"திருக்குறள்",author:"திருவள்ளுவர்",color:["#7a1f2e","#a84432"],icon:"📜",type:"txt",
+// ── DEFAULT BOOKS (only loaded if localStorage is empty) ──
+const DEFAULT_BOOKS=[
+  {id:1,title:"திருக்குறள்",author:"திருவள்ளுவர்",color:["#7a1f2e","#a84432"],icon:"📜",type:"txt",
    chapters:[{label:"அறத்துப்பால்",title:"கடவுள் வாழ்த்து",pages:[
     ["அகர முதல எழுத்தெல்லாம் ஆதி பகவன் முதற்றே உலகு.","கற்றதனால் ஆய பயனென்கொல் வாலறிவன் நற்றாள் தொழாஅர் எனின்."],
-    ["வேண்டுதல் வேண்டாமை இலானடி சேர்ந்தார்க்கு யாண்டும் இடும்பை இல."]
+    ["வேண்டுதல் வேண்டாமை இலானடி சேர்ந்தார்க்கு யாண்டும் இடும்பை இல.","இருள்சேர் இருவினையும் சேரா இறைவன் பொருள்சேர் புகழ்புரிந்தார் மாட்டு."]
   ]}]},
-  {id:3,title:"சிலப்பதிகாரம்",author:"இளங்கோவடிகள்",color:["#1a4a3a","#2d7a5a"],icon:"🏺",type:"txt",
+  {id:2,title:"சிலப்பதிகாரம்",author:"இளங்கோவடிகள்",color:["#1a4a3a","#2d7a5a"],icon:"🏺",type:"txt",
    chapters:[{label:"புகார் காண்டம்",title:"மங்கல வாழ்த்து",pages:[
     ["திங்களைப் போற்றுதும் திங்களைப் போற்றுதும்.","கண்ணகி மதுரை மன்னன் முன்னே சென்று தன் கணவன் கள்வன் அல்ல என்று நிரூபித்தாள்."]
-  ]}]},
-  {id:4,title:"கம்பராமாயணம்",author:"கம்பர்",color:["#2a1a5a","#5a2d9a"],icon:"🏹",type:"txt",
-   chapters:[{label:"பாலகாண்டம்",title:"இராமன் அவதாரம்",pages:[
-    ["உலகம் யாவையும் தாமுள வாக்கலும் நிலைபெறுத்தலும் — அலகிலா விளையாட்டுடையார் அவர்.","இராமன் சீதையை மணந்தான். கைகேயி தன் வரம் கேட்டாள். இராமன் காட்டிற்கு சென்றான்."]
   ]}]}
 ];
+
+// ── localStorage HELPERS ──
+function lsGet(key,def){try{const v=localStorage.getItem(key);return v?JSON.parse(v):def;}catch(e){return def;}}
+function lsSet(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){showToast("சேமிக்க இடம் இல்லை! சில படங்கள் நீக்கவும்");}}
+
+function showToast(msg,dur=2200){
+  const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),dur);
+}
+
+// ── LOAD STATE ──
+let BOOKS=lsGet("vp_books",null);
+if(!BOOKS){BOOKS=DEFAULT_BOOKS;lsSet("vp_books",BOOKS);}
+let nextId=lsGet("vp_nextId",10);
+let progress=lsGet("vp_progress",{});
+let bookmarks=lsGet("vp_bookmarks",{});
+let notes=lsGet("vp_notes",{});
+let fontSize=lsGet("vp_fontSize",17);
+let theme=lsGet("vp_theme","light");
+
+function saveAll(){
+  lsSet("vp_books",BOOKS);lsSet("vp_nextId",nextId);
+  lsSet("vp_progress",progress);lsSet("vp_bookmarks",bookmarks);
+  lsSet("vp_notes",notes);lsSet("vp_fontSize",fontSize);lsSet("vp_theme",theme);
+}
+
+let selIcon=ICONS[0],selColor=COLORS[0],addType="img",uploadedImgs=[];
+let curBook=null,chIdx=0,pgIdx=0,editMode=false,editingBookId=null;
+let imgCurPage=0,curImgBook=null,txStart=null;
 
 const TH={
   light:{bg:"#fdf6e3",text:"#2a1f0e",bar:"#1a1209",border:"rgba(26,18,9,0.09)",sub:"rgba(26,18,9,0.4)",foot:"rgba(253,246,227,0.97)",card:"rgba(26,18,9,0.04)",progBg:"rgba(26,18,9,0.09)"},
@@ -403,150 +411,114 @@ const TH={
   dark:{bg:"#111008",text:"#d8c8a0",bar:"#080603",border:"rgba(216,200,160,0.08)",sub:"rgba(216,200,160,0.38)",foot:"rgba(17,16,8,0.97)",card:"rgba(216,200,160,0.05)",progBg:"rgba(216,200,160,0.08)"}
 };
 
-// ── BOOKMARK HELPERS ──
-function pageKey(b,ch,pg){return `${b.id}_${ch}_${pg}`;}
-function isBookmarked(b,ch,pg){return (bookmarks[b.id]||[]).some(x=>x.ch===ch&&x.pg===pg);}
+// ── BOOKMARKS ──
+function isBookmarked(b,ch,pg){return(bookmarks[b.id]||[]).some(x=>x.ch===ch&&x.pg===pg);}
 
 function toggleBmk(){
-  const b=curBook;
-  if(!bookmarks[b.id]) bookmarks[b.id]=[];
+  const b=curBook;if(!bookmarks[b.id])bookmarks[b.id]=[];
   const exists=isBookmarked(b,chIdx,pgIdx);
-  if(exists){
-    bookmarks[b.id]=bookmarks[b.id].filter(x=>!(x.ch===chIdx&&x.pg===pgIdx));
-  } else {
-    const ch=b.chapters[chIdx];
-    let gp=0;for(let i=0;i<chIdx;i++)gp+=b.chapters[i].pages.length;gp+=pgIdx+1;
+  if(exists){bookmarks[b.id]=bookmarks[b.id].filter(x=>!(x.ch===chIdx&&x.pg===pgIdx));showToast("🔖 Bookmark நீக்கப்பட்டது");}
+  else{
+    const ch=b.chapters[chIdx];let gp=0;for(let i=0;i<chIdx;i++)gp+=b.chapters[i].pages.length;gp+=pgIdx+1;
     bookmarks[b.id].push({ch:chIdx,pg:pgIdx,chTitle:ch.title,label:`${ch.label} — பக்கம் ${gp}`});
+    showToast("🔖 Bookmark சேமிக்கப்பட்டது ✓");
   }
-  updateBmkBtn();
-  renderGrid();
+  saveAll();updateBmkBtn();renderGrid();
 }
 
 function toggleImgBmk(){
-  const b=curImgBook;
-  if(!bookmarks[b.id]) bookmarks[b.id]=[];
+  const b=curImgBook;if(!bookmarks[b.id])bookmarks[b.id]=[];
   const exists=(bookmarks[b.id]||[]).some(x=>x.pg===imgCurPage);
-  if(exists){bookmarks[b.id]=bookmarks[b.id].filter(x=>x.pg!==imgCurPage);}
-  else{bookmarks[b.id].push({pg:imgCurPage,chTitle:"",label:`பக்கம் ${imgCurPage+1}`});}
-  document.getElementById("imgBmkBtn").classList.toggle("active",!exists);
-  renderGrid();
+  if(exists){bookmarks[b.id]=bookmarks[b.id].filter(x=>x.pg!==imgCurPage);showToast("🔖 Bookmark நீக்கப்பட்டது");}
+  else{bookmarks[b.id].push({pg:imgCurPage,chTitle:"",label:`பக்கம் ${imgCurPage+1}`});showToast("🔖 Bookmark சேமிக்கப்பட்டது ✓");}
+  saveAll();document.getElementById("imgBmkBtn").classList.toggle("active",!exists);renderGrid();
 }
 
 function updateBmkBtn(){
   const bm=isBookmarked(curBook,chIdx,pgIdx);
   const btn=document.getElementById("btnBmk");
-  btn.classList.toggle("active",bm);
-  btn.style.color=bm?"#c9932a":"#aaa";
+  btn.classList.toggle("active",bm);btn.style.color=bm?"#c9932a":"#aaa";
 }
 
 function openBmPanel(){
-  const b=curBook||curImgBook;
-  if(!b) return;
+  const b=curBook||curImgBook;if(!b)return;
   const bms=bookmarks[b.id]||[];
-  const list=document.getElementById("bmList");
-  list.innerHTML="";
-  if(bms.length===0){list.innerHTML='<div class="bm-empty">📌 இன்னும் புக்மார்க் இல்லை<br><span style="font-size:.7rem">🔖 button press பண்ணி சேர்க்கலாம்</span></div>';
-  } else {
-    bms.forEach((bm,i)=>{
-      const div=document.createElement("div");div.className="bm-item";
-      div.innerHTML=`<div class="bm-item-left"><div class="bm-item-ch">${bm.chTitle||""}</div><div class="bm-item-title">${bm.label}</div></div><button class="bm-item-del" onclick="event.stopPropagation();deleteBm(${i})">🗑️</button>`;
-      div.onclick=()=>{
-        closeBm();
-        if(curBook){chIdx=bm.ch;pgIdx=bm.pg;renderPage();}
-        else if(curImgBook){imgCurPage=bm.pg;renderImgPage();}
-      };
-      list.appendChild(div);
-    });
-  }
+  const list=document.getElementById("bmList");list.innerHTML="";
+  if(bms.length===0){list.innerHTML='<div class="bm-empty">📌 இன்னும் புக்மார்க் இல்லை<br><span style="font-size:.7rem">🔖 button press பண்ணி சேர்க்கலாம்</span></div>';}
+  else{bms.forEach((bm,i)=>{
+    const div=document.createElement("div");div.className="bm-item";
+    div.innerHTML=`<div class="bm-item-left"><div class="bm-item-ch">${bm.chTitle||""}</div><div class="bm-item-title">${bm.label}</div></div><button class="bm-item-del" onclick="event.stopPropagation();deleteBm(${i})">🗑️</button>`;
+    div.onclick=()=>{closeBm();if(curBook){chIdx=bm.ch;pgIdx=bm.pg;renderPage();}else if(curImgBook){imgCurPage=bm.pg;renderImgPage();}};
+    list.appendChild(div);
+  });}
   document.getElementById("bmPanel").classList.add("show");
 }
 
 function deleteBm(i){
-  const b=curBook||curImgBook;
-  if(b&&bookmarks[b.id]) bookmarks[b.id].splice(i,1);
-  openBmPanel();
-  updateBmkBtn();
+  const b=curBook||curImgBook;if(b&&bookmarks[b.id])bookmarks[b.id].splice(i,1);
+  saveAll();openBmPanel();if(curBook)updateBmkBtn();
 }
 
-function closeBm(e){
-  if(e&&e.target!==document.getElementById("bmPanel"))return;
-  document.getElementById("bmPanel").classList.remove("show");
-}
+function closeBm(e){if(e&&e.target!==document.getElementById("bmPanel"))return;document.getElementById("bmPanel").classList.remove("show");}
 
-// ── NOTES HELPERS ──
+// ── NOTES ──
 function getCurPageKey(){
-  if(curBook) return pageKey(curBook,chIdx,pgIdx);
-  if(curImgBook) return `${curImgBook.id}_img_${imgCurPage}`;
-  return null;
+  if(curBook)return`${curBook.id}_${chIdx}_${pgIdx}`;
+  if(curImgBook)return`${curImgBook.id}_img_${imgCurPage}`;return null;
 }
 
-function openNotes(mode){
+function openNotes(){
   const b=curBook||curImgBook;if(!b)return;
   const key=getCurPageKey();
   const bNotes=(notes[b.id]||{})[key]||[];
-  const list=document.getElementById("notesList");
-  list.innerHTML="";
-
+  const list=document.getElementById("notesList");list.innerHTML="";
   let pgLabel="";
   if(curBook){let gp=0;for(let i=0;i<chIdx;i++)gp+=curBook.chapters[i].pages.length;gp+=pgIdx+1;pgLabel=`${curBook.chapters[chIdx].label} — பக்கம் ${gp}`;}
   else pgLabel=`பக்கம் ${imgCurPage+1}`;
   document.getElementById("notePageInfo").textContent=`📍 ${pgLabel}`;
   document.getElementById("noteInput").value="";
-
-  if(bNotes.length===0){
-    list.innerHTML='<div style="color:rgba(240,224,192,.3);font-size:.78rem;font-style:italic;text-align:center;padding:14px 0">இன்னும் குறிப்பு இல்லை — கீழே எழுதுங்கள்!</div>';
-  } else {
-    bNotes.forEach((n,i)=>{
-      const d=document.createElement("div");d.className="note-item";
-      const dt=new Date(n.ts);const timeStr=`${dt.getDate()}/${dt.getMonth()+1} ${dt.getHours()}:${String(dt.getMinutes()).padStart(2,"0")}`;
-      d.innerHTML=`<div class="note-item-pg">${pgLabel} · ${timeStr}</div><div class="note-item-text">${n.text}</div><button class="note-item-del" onclick="deleteNote('${key}',${i})">🗑️</button>`;
-      list.appendChild(d);
-    });
-  }
+  if(bNotes.length===0){list.innerHTML='<div style="color:rgba(240,224,192,.3);font-size:.78rem;font-style:italic;text-align:center;padding:14px 0">இன்னும் குறிப்பு இல்லை — கீழே எழுதுங்கள்!</div>';}
+  else{bNotes.forEach((n,i)=>{
+    const d=document.createElement("div");d.className="note-item";
+    const dt=new Date(n.ts);const ts=`${dt.getDate()}/${dt.getMonth()+1} ${dt.getHours()}:${String(dt.getMinutes()).padStart(2,"0")}`;
+    d.innerHTML=`<div class="note-item-pg">${pgLabel} · ${ts}</div><div class="note-item-text">${n.text}</div><button class="note-item-del" onclick="deleteNote('${key}',${i})">🗑️</button>`;
+    list.appendChild(d);
+  });}
   document.getElementById("notesPanel").classList.add("show");
 }
 
 function saveNote(){
   const b=curBook||curImgBook;if(!b)return;
-  const txt=document.getElementById("noteInput").value.trim();
-  if(!txt) return;
+  const txt=document.getElementById("noteInput").value.trim();if(!txt)return;
   const key=getCurPageKey();
-  if(!notes[b.id]) notes[b.id]={};
-  if(!notes[b.id][key]) notes[b.id][key]=[];
+  if(!notes[b.id])notes[b.id]={};
+  if(!notes[b.id][key])notes[b.id][key]=[];
   notes[b.id][key].push({text:txt,ts:Date.now()});
-  document.getElementById("noteInput").value="";
-  openNotes();
-  updateNoteIndicator();
-  updateNoteBadge();
+  saveAll();document.getElementById("noteInput").value="";
+  showToast("📝 குறிப்பு சேமிக்கப்பட்டது ✓");
+  openNotes();updateNoteIndicator();updateNoteBadge();
 }
 
 function deleteNote(key,i){
   const b=curBook||curImgBook;if(!b)return;
-  if(notes[b.id]&&notes[b.id][key]) notes[b.id][key].splice(i,1);
-  openNotes();
-  updateNoteIndicator();
-  updateNoteBadge();
+  if(notes[b.id]&&notes[b.id][key])notes[b.id][key].splice(i,1);
+  saveAll();openNotes();updateNoteIndicator();updateNoteBadge();
 }
 
-function closeNotes(e){
-  if(e&&e.target!==document.getElementById("notesPanel"))return;
-  document.getElementById("notesPanel").classList.remove("show");
-}
+function closeNotes(e){if(e&&e.target!==document.getElementById("notesPanel"))return;document.getElementById("notesPanel").classList.remove("show");}
 
 function updateNoteIndicator(){
-  if(!curBook)return;
-  const key=getCurPageKey();
+  if(!curBook)return;const key=getCurPageKey();
   const n=(notes[curBook.id]||{})[key]||[];
   const ind=document.getElementById("noteIndicator");
   if(n.length>0){ind.style.display="block";ind.textContent=`📝 ${n.length} குறிப்பு${n.length>1?"கள்":""} — தொட்டு பார்க்கவும்`;}
-  else{ind.style.display="none";}
+  else ind.style.display="none";
 }
 
 function updateNoteBadge(){
-  if(!curBook)return;
-  const key=getCurPageKey();
-  const hasNotes=((notes[curBook.id]||{})[key]||[]).length>0;
-  document.getElementById("btnNote").classList.toggle("has-badge",hasNotes);
+  if(!curBook)return;const key=getCurPageKey();
+  const has=((notes[curBook.id]||{})[key]||[]).length>0;
+  document.getElementById("btnNote").classList.toggle("has-badge",has);
 }
 
 // ── LIBRARY ──
@@ -560,7 +532,10 @@ function toggleEditMode(){
 function confirmDelete(id){
   const book=BOOKS.find(b=>b.id===id);
   document.getElementById("dialogTitle").textContent=`"${book.title}" நீக்கவா?`;
-  document.getElementById("dialogConfirmBtn").onclick=()=>{BOOKS.splice(BOOKS.findIndex(b=>b.id===id),1);closeDialog();renderGrid();};
+  document.getElementById("dialogConfirmBtn").onclick=()=>{
+    BOOKS.splice(BOOKS.findIndex(b=>b.id===id),1);
+    saveAll();closeDialog();showToast("🗑️ நூல் நீக்கப்பட்டது");renderGrid();
+  };
   document.getElementById("confirmDialog").classList.add("show");
 }
 
@@ -568,17 +543,14 @@ function closeDialog(){document.getElementById("confirmDialog").classList.remove
 
 function renderGrid(){
   const grid=document.getElementById("bookGrid");grid.innerHTML="";
-  if(editMode) grid.classList.add("edit-mode");
+  if(editMode)grid.classList.add("edit-mode");
   BOOKS.forEach((b,i)=>{
     const tot=b.type==="img"?b.images.length:b.chapters.reduce((s,c)=>s+c.pages.length,0);
-    const done=progress[b.id]||0;
-    const pct=Math.round((done/tot)*100);
-    const bms=bookmarks[b.id]||[];
-    const hasBm=bms.length>0;
-    const lastBm=bms[bms.length-1];
+    const pct=Math.round(((progress[b.id]||0)/tot)*100);
+    const bms=bookmarks[b.id]||[];const lastBm=bms[bms.length-1];
     const div=document.createElement("div");div.className="book-card";div.style.animationDelay=(Math.min(i,5)*0.07)+"s";
     div.innerHTML=`
-      ${hasBm?`<div class="bookmark-badge">🔖</div>`:""}
+      ${bms.length>0?'<div class="bookmark-badge">🔖</div>':""}
       <div class="card-edit-overlay">
         <button class="card-action-btn btn-edit-book" onclick="event.stopPropagation();editBook(${b.id})">✏️ திருத்து</button>
         <button class="card-action-btn btn-del-book" onclick="event.stopPropagation();confirmDelete(${b.id})">🗑️ நீக்கு</button>
@@ -598,11 +570,7 @@ function renderGrid(){
           ${lastBm?`<div class="continue-bar">🔖 ${lastBm.label} — தொடரவும்</div>`:""}
         </div>
       </div>`;
-    div.onclick=()=>{
-      if(editMode)return;
-      if(b.type==="img") openImgBook(b);
-      else openBook(b);
-    };
+    div.onclick=()=>{if(editMode)return;b.type==="img"?openImgBook(b):openBook(b);};
     grid.appendChild(div);
   });
 }
@@ -612,11 +580,10 @@ function showAdd(){
   editingBookId=null;
   document.getElementById("addBarTitle").textContent="புதிய நூல்";
   document.getElementById("saveBtn").textContent="✦ நூல் சேர்க்கவும்";
-  document.getElementById("typeTabs").style.pointerEvents="";document.getElementById("typeTabs").style.opacity="";
+  document.getElementById("typeTabs").style.cssText="";
   document.getElementById("library").style.display="none";
   document.getElementById("addScreen").style.display="flex";
-  document.getElementById("inTitle").value="";document.getElementById("inAuthor").value="";
-  document.getElementById("inChTitle").value="";document.getElementById("inContent").value="";
+  ["inTitle","inAuthor","inChTitle","inContent"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
   document.getElementById("previewGrid").innerHTML="";document.getElementById("imgCount").textContent="";
   uploadedImgs=[];selIcon=ICONS[0];selColor=COLORS[0];switchType("img");initAddScreen();
 }
@@ -635,7 +602,7 @@ function editBook(id){
   document.getElementById("tabTxt").classList.toggle("active",book.type==="txt");
   document.getElementById("imgMode").style.display=book.type==="img"?"block":"none";
   document.getElementById("txtMode").style.display=book.type==="txt"?"block":"none";
-  document.getElementById("typeTabs").style.pointerEvents="none";document.getElementById("typeTabs").style.opacity=".5";
+  document.getElementById("typeTabs").style.cssText="pointer-events:none;opacity:.5";
   if(book.type==="txt"&&book.chapters?.length>0){
     document.getElementById("inChTitle").value=book.chapters[0].title||"";
     document.getElementById("inContent").value=book.chapters[0].pages.map(pg=>pg.join("\n")).join("\n");
@@ -651,7 +618,13 @@ function initAddScreen(){
   COLORS.forEach(cl=>{const d=document.createElement("div");d.className="color-opt"+(JSON.stringify(cl)===JSON.stringify(selColor)?" sel":"");d.style.background=`linear-gradient(135deg,${cl[0]},${cl[1]})`;d.onclick=()=>{selColor=cl;document.querySelectorAll(".color-opt").forEach(x=>x.classList.remove("sel"));d.classList.add("sel");};cg.appendChild(d);});
 }
 
-function switchType(t){addType=t;document.getElementById("tabImg").classList.toggle("active",t==="img");document.getElementById("tabTxt").classList.toggle("active",t==="txt");document.getElementById("imgMode").style.display=t==="img"?"block":"none";document.getElementById("txtMode").style.display=t==="txt"?"block":"none";}
+function switchType(t){
+  addType=t;
+  document.getElementById("tabImg").classList.toggle("active",t==="img");
+  document.getElementById("tabTxt").classList.toggle("active",t==="txt");
+  document.getElementById("imgMode").style.display=t==="img"?"block":"none";
+  document.getElementById("txtMode").style.display=t==="txt"?"block":"none";
+}
 
 function handleImages(input){
   const files=Array.from(input.files);uploadedImgs=[];document.getElementById("previewGrid").innerHTML="";
@@ -672,21 +645,24 @@ function saveBook(){
   const author=document.getElementById("inAuthor").value.trim()||"ஆசிரியர் அறியப்படவில்லை";
   if(editingBookId){
     const idx=BOOKS.findIndex(b=>b.id===editingBookId);
-    if(idx>-1){BOOKS[idx].title=title;BOOKS[idx].author=author;BOOKS[idx].icon=selIcon;BOOKS[idx].color=selColor;
+    if(idx>-1){
+      BOOKS[idx].title=title;BOOKS[idx].author=author;BOOKS[idx].icon=selIcon;BOOKS[idx].color=selColor;
       if(addType==="txt"){const content=document.getElementById("inContent").value.trim();const chTitle=document.getElementById("inChTitle").value.trim()||"அத்தியாயம் 1";if(content){const lines=content.split("\n").map(l=>l.trim()).filter(l=>l.length>0);const pages=[];for(let i=0;i<lines.length;i+=4)pages.push(lines.slice(i,i+4));BOOKS[idx].chapters=[{label:"அத்தியாயம் 1",title:chTitle,pages}];}}
       else if(addType==="img"&&uploadedImgs.filter(Boolean).length>0){BOOKS[idx].images=uploadedImgs.filter(Boolean);}
     }
+    showToast("✓ மாற்றங்கள் சேமிக்கப்பட்டன!");
   } else {
     if(addType==="img"){const imgs=uploadedImgs.filter(Boolean);if(imgs.length===0){alert("படம் தேர்வு செய்யுங்கள்!");return;}BOOKS.unshift({id:nextId++,title,author,color:selColor,icon:selIcon,type:"img",images:imgs});}
     else{const content=document.getElementById("inContent").value.trim();if(!content){alert("உள்ளடக்கம் தட்டச்சு பண்ணுங்கள்!");return;}const chTitle=document.getElementById("inChTitle").value.trim()||"அத்தியாயம் 1";const lines=content.split("\n").map(l=>l.trim()).filter(l=>l.length>0);const pages=[];for(let i=0;i<lines.length;i+=4)pages.push(lines.slice(i,i+4));BOOKS.unshift({id:nextId++,title,author,color:selColor,icon:selIcon,type:"txt",chapters:[{label:"அத்தியாயம் 1",title:chTitle,pages}]});}
+    showToast("✦ புதிய நூல் சேர்க்கப்பட்டது!");
   }
-  document.getElementById("typeTabs").style.pointerEvents="";document.getElementById("typeTabs").style.opacity="";
-  uploadedImgs=[];editingBookId=null;editMode=false;showLibrary();
+  saveAll();document.getElementById("typeTabs").style.cssText="";uploadedImgs=[];editingBookId=null;editMode=false;showLibrary();
 }
 
 // ── IMAGE READER ──
 function openImgBook(b){
-  curImgBook=b;curBook=null;imgCurPage=0;
+  curImgBook=b;curBook=null;
+  imgCurPage=progress[b.id]?Math.min(progress[b.id]-1,b.images.length-1):0;
   document.getElementById("library").style.display="none";
   const r=document.getElementById("imgReader");r.style.display="flex";
   document.getElementById("imgReaderTitle").textContent=b.title;
@@ -705,7 +681,7 @@ function renderImgPage(){
   const dots=document.getElementById("imgDots");dots.innerHTML="";
   const show=Math.min(total,15),start=Math.max(0,Math.min(imgCurPage-7,total-show));
   for(let i=start;i<start+show;i++){const d=document.createElement("div");d.className="img-dot"+(i===imgCurPage?" active":"");d.onclick=(idx=>()=>{imgCurPage=idx;renderImgPage();})(i);dots.appendChild(d);}
-  progress[curImgBook.id]=imgCurPage+1;
+  progress[curImgBook.id]=imgCurPage+1;saveAll();
 }
 
 function imgNavigate(dir){imgCurPage=Math.max(0,Math.min(curImgBook.images.length-1,imgCurPage+dir));renderImgPage();}
@@ -736,7 +712,16 @@ function updateNavBtns(){
 }
 
 function openBook(b){
-  curBook=b;curImgBook=null;chIdx=0;pgIdx=0;
+  curBook=b;curImgBook=null;
+  // Resume from last position
+  const saved=progress[b.id]||0;
+  let gp=0,found=false;
+  for(let c=0;c<b.chapters.length&&!found;c++){
+    for(let p=0;p<b.chapters[c].pages.length&&!found;p++){
+      gp++;if(gp>=saved){chIdx=c;pgIdx=p;found=true;}
+    }
+  }
+  if(!found){chIdx=0;pgIdx=0;}
   document.getElementById("library").style.display="none";
   const r=document.getElementById("reader");r.style.display="flex";
   document.getElementById("readerTitle").textContent=b.title;
@@ -757,7 +742,7 @@ function renderPage(){
   let gp=0;for(let i=0;i<chIdx;i++)gp+=curBook.chapters[i].pages.length;gp+=pgIdx+1;
   const tot=curBook.chapters.reduce((s,c)=>s+c.pages.length,0),pct=Math.round((gp/tot)*100);
   document.getElementById("progActive").style.width=pct+"%";document.getElementById("navPg").textContent=gp+"/"+tot;document.getElementById("navPct").textContent=pct+"%";
-  progress[curBook.id]=gp;
+  progress[curBook.id]=gp;saveAll();
   updateBmkBtn();updateNoteIndicator();updateNoteBadge();updateNavBtns();
   document.getElementById("contentArea").scrollTop=0;
 }
@@ -769,8 +754,8 @@ function navigate(dir){
   renderPage();
 }
 
-function chgFont(d){fontSize=Math.min(26,Math.max(13,fontSize+d));renderPage();}
-function toggleTheme(t){theme=theme===t?"light":t;document.getElementById("btnSepia").classList.toggle("active",theme==="sepia");document.getElementById("btnDark").classList.toggle("active",theme==="dark");applyTheme();}
+function chgFont(d){fontSize=Math.min(26,Math.max(13,fontSize+d));saveAll();renderPage();}
+function toggleTheme(t){theme=theme===t?"light":t;saveAll();document.getElementById("btnSepia").classList.toggle("active",theme==="sepia");document.getElementById("btnDark").classList.toggle("active",theme==="dark");applyTheme();}
 
 function showLibrary(){
   curBook=null;curImgBook=null;
@@ -782,5 +767,4 @@ function showLibrary(){
 renderGrid();
 </script>
 </body>
-
 </html>
